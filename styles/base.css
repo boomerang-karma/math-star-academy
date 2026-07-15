@@ -1,0 +1,176 @@
+/* base.css — design tokens, reset, root layout, shared animations.
+   The whole app is themed from the custom properties in :root so a designer
+   can re-skin it here without touching a single component. */
+
+:root {
+  /* ---- palette (soft pastel yet rich) ---- */
+  --sky-1: #a2d2ff;
+  --sky-2: #cde7ff;
+  --grass-1: #90be6d;
+  --grass-2: #52b788;
+  --pink: #ff8fab;
+  --pink-deep: #f7699a;
+  --yellow: #ffd166;
+  --purple: #c77dff;
+  --purple-deep: #9d4edd;
+  --blue: #4cc9f0;
+  --red: #ff6b6b;
+  --orange: #f4a261;
+  --cream: #fff8ef;
+  --ink: #4a3f6b;
+  --ink-soft: #7a6f95;
+  --white: #ffffff;
+
+  /* per-scene accent (overridden by [data-accent]) */
+  --accent: var(--grass-2);
+  --accent-soft: #d8f3dc;
+
+  /* ---- shape & depth ---- */
+  --r-sm: 12px;
+  --r-md: 20px;
+  --r-lg: 32px;
+  --r-xl: 44px;
+  --shadow-sm: 0 4px 10px rgba(74, 63, 107, 0.12);
+  --shadow-md: 0 10px 26px rgba(74, 63, 107, 0.18);
+  --shadow-lg: 0 18px 44px rgba(74, 63, 107, 0.24);
+  --ring: 0 0 0 4px rgba(255, 255, 255, 0.7), 0 0 0 8px var(--accent);
+
+  /* ---- type ---- */
+  --font: "Baloo 2", "Quicksand", "Trebuchet MS", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --fs-base: 18px;
+
+  --nav-h: 76px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  color: var(--ink);
+  background: var(--sky-2);
+  overflow: hidden;
+  height: 100vh;
+  height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Larger text accessibility toggle. */
+:root[data-large-text="true"] { --fs-base: 21px; }
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+img, svg { display: block; }
+h1, h2, h3 { font-weight: 800; line-height: 1.1; }
+
+/* ---- app shell ---- */
+.app-root {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.fx-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--nav-h) + var(--safe-b));
+}
+.stage::-webkit-scrollbar { width: 0; height: 0; }
+
+/* ---- scene transition ---- */
+.scene-in { animation: sceneIn 0.42s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes sceneIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---- shared micro-animations ---- */
+.pop-in { animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.bump { animation: bump 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+.shake { animation: shake 0.4s; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+.poof { animation: poof 0.2s ease-in forwards; }
+@keyframes poof {
+  to { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+}
+
+/* Flying clone used when objects hop into baskets/pots. */
+.fly-clone {
+  position: fixed;
+  z-index: 9998;
+  pointer-events: none;
+  transition: transform 0.35s cubic-bezier(0.5, -0.2, 0.4, 1.3), opacity 0.35s ease;
+  will-change: transform;
+}
+.fly-clone svg { width: 100%; height: auto; }
+
+/* Butterflies that fly across on pattern wins. */
+.flyby-butterfly {
+  position: fixed;
+  width: 44px;
+  z-index: 70;
+  pointer-events: none;
+  animation: flyby 1.6s ease-in forwards;
+}
+@keyframes flyby {
+  to { transform: translate(var(--dx), var(--dy)) rotate(20deg); opacity: 0; }
+}
+
+/* ---- reduced motion ---- */
+:root[data-reduced-motion="true"] * {
+  animation-duration: 0.001s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.06s !important;
+}
+:root[data-reduced-motion="true"] .cloud,
+:root[data-reduced-motion="true"] .lumi-wings,
+:root[data-reduced-motion="true"] .map-flower { animation: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001s !important; transition-duration: 0.06s !important; }
+}
+
+/* ---- utility ---- */
+.hidden { display: none !important; }
+.section-label {
+  font-weight: 800;
+  color: var(--ink);
+  margin: 22px 18px 10px;
+  font-size: 1.05rem;
+  opacity: 0.85;
+}
+.coppa-note {
+  margin: 20px 18px calc(var(--nav-h) + 20px);
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  text-align: center;
+}

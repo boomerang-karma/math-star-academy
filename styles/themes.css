@@ -1,0 +1,42 @@
+/* themes.css — per-zone accent palettes, day/night skies, high-contrast mode.
+   Each activity carries a [data-accent] that recolors its accent variables, so
+   games inherit a cohesive look with zero per-game color code. */
+
+[data-accent="meadow"]    { --accent: #52b788; --accent-soft: #d8f3dc; }
+[data-accent="orchard"]   { --accent: #f7699a; --accent-soft: #ffe0ec; }
+[data-accent="grove"]     { --accent: #9d4edd; --accent-soft: #ede0ff; }
+[data-accent="shapes"]    { --accent: #4cc9f0; --accent-soft: #d6f3fc; }
+[data-accent="pond"]      { --accent: #4895ef; --accent-soft: #dbeafe; }
+[data-accent="hill"]      { --accent: #f4a261; --accent-soft: #ffeeda; }
+[data-accent="greenhouse"]{ --accent: #90be6d; --accent-soft: #e6f4d7; }
+
+/* ---- garden map time-of-day skies ---- */
+.garden-map[data-tod="day"]  { --sky-a: #a2d2ff; --sky-b: #e8f7ff; --sun-op: 1; }
+.garden-map[data-tod="dawn"] { --sky-a: #ffc8dd; --sky-b: #fff1e6; --sun-op: 0.8; }
+.garden-map[data-tod="dusk"] { --sky-a: #ffafcc; --sky-b: #ffd6a5; --sun-op: 0.7; }
+.garden-map[data-tod="night"]{ --sky-a: #4361a8; --sky-b: #7796d6; --sun-op: 0; }
+.garden-map[data-tod="night"] .map-title,
+.garden-map[data-tod="night"] .map-sub { color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,.3); }
+
+/* ---- high contrast accessibility ---- */
+:root[data-high-contrast="true"] {
+  --ink: #1a1030;
+  --ink-soft: #3a2f55;
+  --accent-soft: #ffffff;
+}
+:root[data-high-contrast="true"] body { background: #fff; }
+:root[data-high-contrast="true"] .btn,
+:root[data-high-contrast="true"] .map-zone,
+:root[data-high-contrast="true"] .bush-card,
+:root[data-high-contrast="true"] .shop-card,
+:root[data-high-contrast="true"] .sticker-card,
+:root[data-high-contrast="true"] .setting-item {
+  outline: 3px solid var(--ink);
+}
+:root[data-high-contrast="true"] .instruction-bar,
+:root[data-high-contrast="true"] .topbar-title { color: #1a1030; }
+
+/* gentle floating for clouds & flowers (disabled by reduced motion in base) */
+@keyframes drift { from { transform: translateX(-30px); } to { transform: translateX(30px); } }
+@keyframes sway { 0%,100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@keyframes bobfloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }

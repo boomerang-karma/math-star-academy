@@ -1,0 +1,185 @@
+/* games.css — the shared game shell and each activity's board.
+   Boards are portrait-first with big, forgiving touch targets. */
+
+.game-shell {
+  display: flex; flex-direction: column; min-height: 100dvh;
+  max-width: 680px; margin: 0 auto; padding-bottom: 20px;
+}
+.game-shell.shake { animation: shake 0.4s; }
+
+.instruction-bar {
+  margin: 4px 16px 8px; padding: 12px 18px; text-align: center;
+  font-weight: 800; font-size: 1.12rem; color: var(--ink);
+  background: rgba(255,255,255,0.8); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm); min-height: 24px;
+}
+.game-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 14px; padding: 6px 14px; width: 100%; }
+.game-footer { min-height: 76px; display: grid; place-items: center; padding: 8px; }
+
+/* draggable helpers */
+.draggable { cursor: grab; touch-action: none; }
+.draggable.dragging { cursor: grabbing; transform: scale(1.12); filter: drop-shadow(0 10px 12px rgba(0,0,0,0.25)); }
+.drop-hover { outline: 4px dashed var(--accent); outline-offset: 3px; background: color-mix(in srgb, var(--accent) 16%, transparent); }
+
+/* ============ Counting Meadow ============ */
+.count-display { font-size: 3.4rem; font-weight: 900; color: var(--accent); text-shadow: 0 3px 0 rgba(255,255,255,0.8); min-height: 60px; }
+.meadow {
+  position: relative; width: 100%; height: 40vh; min-height: 260px;
+  background: radial-gradient(120% 100% at 50% 120%, var(--accent-soft), transparent),
+              linear-gradient(180deg, #eaf7f0, #d8f3dc);
+  border-radius: var(--r-lg); box-shadow: inset 0 4px 14px rgba(82,183,136,0.2); overflow: hidden;
+}
+.critter { position: absolute; width: 60px; height: 60px; transform: translate(-50%, -50%); transition: transform 0.16s; }
+.critter svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.15)); animation: sway 3s ease-in-out infinite; }
+.critter:active { transform: translate(-50%, -50%) scale(0.8); }
+.critter.collected { pointer-events: none; }
+.counting-bottom { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; width: 100%; }
+.target-card { background: #fff; border-radius: var(--r-md); padding: 8px 16px; text-align: center; box-shadow: var(--shadow-sm); }
+.target-card span { font-size: 0.75rem; color: var(--ink-soft); font-weight: 700; }
+.target-card b { display: block; font-size: 2.4rem; color: var(--accent); }
+.basket { position: relative; width: 190px; }
+.basket > svg { width: 100%; height: auto; }
+.ten-frame { position: absolute; top: 34%; left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(5, 1fr); grid-auto-rows: 1fr; gap: 3px; width: 78%; }
+.tf-cell { aspect-ratio: 1; border: 2px dashed rgba(122,111,149,0.4); border-radius: 6px; display: grid; place-items: center; }
+.tf-cell.filled { border-style: solid; border-color: var(--accent); }
+.tf-cell svg, .basket-item { width: 90%; height: 90%; }
+.basket-pile { position: absolute; top: 30%; left: 50%; transform: translateX(-50%); display: flex; flex-wrap: wrap; width: 74%; justify-content: center; gap: 2px; }
+.basket-pile .basket-item { width: 30px; height: 30px; animation: popIn 0.3s backwards; }
+.removable { cursor: pointer; }
+.removable:active { transform: scale(0.85); }
+
+/* ============ Addition Orchard ============ */
+.orchard { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 8px; width: 100%; min-height: 42vh; }
+.tree { display: flex; flex-direction: column; align-items: center; position: relative; }
+.tree-canopy { width: 130px; }
+.tree-canopy svg { width: 100%; height: auto; }
+.tree-fruits { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 150px; margin-top: -30px; position: relative; z-index: 2; }
+.fruit { width: 46px; height: 46px; transition: transform 0.14s; }
+.fruit svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 3px rgba(0,0,0,0.18)); }
+.fruit:active { transform: scale(0.85); }
+.fruit.picked { visibility: hidden; }
+.magic-pot { position: relative; width: 150px; align-self: center; }
+.magic-pot > svg { width: 100%; height: auto; }
+.pot-fill { position: absolute; bottom: 8%; left: 22%; right: 22%; height: 12%; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 70%, #fff), var(--accent)); border-radius: 0 0 10px 10px; transition: height 0.3s; opacity: 0.85; }
+.pot-count { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); font-size: 2.4rem; font-weight: 900; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,0.35); }
+.equation { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 2rem; font-weight: 900; color: var(--ink); background: #fff; padding: 10px 22px; border-radius: var(--r-lg); box-shadow: var(--shadow-sm); }
+.equation b { color: var(--accent); min-width: 20px; }
+.equation .eq-sum.solved, .equation.solved .eq-sum { animation: bump 0.5s; color: var(--pink-deep); }
+.number-line { position: relative; width: 100%; max-width: 560px; height: 64px; margin-top: 4px; }
+.number-line::before { content: ""; position: absolute; top: 40px; left: 2%; right: 2%; height: 5px; background: var(--accent-soft); border-radius: 3px; }
+.nl-mark { position: absolute; top: 30px; display: flex; flex-direction: column; align-items: center; transform: translateX(-50%); }
+.nl-mark:nth-child(1) { left: 2%; } /* spacing set inline below via flow */
+.number-line { display: flex; justify-content: space-between; padding: 0 2%; }
+.nl-mark { position: static; transform: none; }
+.nl-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); margin-top: 34px; }
+.nl-mark small { font-size: 0.7rem; font-weight: 800; color: var(--ink-soft); }
+.nl-hopper { position: absolute; top: 2px; font-size: 1.6rem; transition: left 0.35s cubic-bezier(0.34,1.56,0.64,1); z-index: 3; }
+.nl-hopper.hop { animation: hopJump 0.4s; }
+@keyframes hopJump { 0%,100% { transform: translateY(0); } 40% { transform: translateY(-18px); } }
+
+/* ============ Berry Sharing Grove ============ */
+.friends { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; width: 100%; }
+.friend { display: flex; flex-direction: column; align-items: center; gap: 4px; transition: transform 0.2s; }
+.friend.happy { animation: bump 0.6s; }
+.animal-bubble { background: #fff; font-weight: 800; font-size: 0.85rem; padding: 6px 12px; border-radius: 14px 14px 14px 3px; box-shadow: var(--shadow-sm); }
+.animal-avatar { width: 92px; height: 92px; }
+.animal-avatar svg { width: 100%; height: 100%; filter: drop-shadow(0 4px 5px rgba(0,0,0,0.15)); }
+.friend.happy .animal-avatar { animation: dance 0.5s ease-in-out 3; }
+.animal-basket { position: relative; min-width: 92px; min-height: 44px; background: var(--accent-soft); border: 3px dashed var(--accent); border-radius: 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px; padding: 6px; }
+.ab-count { position: absolute; top: -12px; right: -8px; background: var(--accent); color: #fff; font-weight: 800; font-size: 0.78rem; padding: 2px 8px; border-radius: 12px; }
+.basket-berry { width: 22px; height: 22px; animation: popIn 0.3s; }
+.pile-label { font-weight: 800; color: var(--purple-deep); }
+.berry-pile { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 420px; padding: 14px; background: radial-gradient(circle at 50% 30%, #fff6, transparent); border-radius: var(--r-lg); }
+.berry { width: 48px; height: 48px; transition: transform 0.14s; }
+.berry svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.2)); }
+.berry:active { transform: scale(0.85); }
+.berry.given { visibility: hidden; }
+.leftover-glow svg { animation: glowpulse 1.2s ease-in-out infinite; }
+@keyframes glowpulse { 0%,100% { filter: drop-shadow(0 0 2px var(--yellow)); } 50% { filter: drop-shadow(0 0 12px var(--yellow)); } }
+.share-eq { margin-top: 10px; }
+
+/* ============ Shape Grove ============ */
+.build-canvas {
+  position: relative; width: 100%; max-width: 460px; aspect-ratio: 1 / 0.92;
+  background: linear-gradient(180deg, #eaf7ff, #d6f3fc 60%, #cde) ; border-radius: var(--r-lg);
+  box-shadow: inset 0 4px 14px rgba(76,201,240,0.2); overflow: hidden;
+}
+.build-canvas::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22%; background: linear-gradient(180deg, var(--grass-1), var(--grass-2)); }
+.shape-slot { position: absolute; transform: translate(-50%, -50%); display: grid; place-items: center; z-index: 2; }
+.shape-slot svg { width: 100%; height: 100%; }
+.shape-slot[data-filled="false"] { animation: slotpulse 1.6s ease-in-out infinite; }
+@keyframes slotpulse { 0%,100% { opacity: 0.55; } 50% { opacity: 0.9; } }
+.shape-slot.slot-filled { animation: bump 0.4s; }
+.build-canvas.scene-complete { animation: bump 0.6s; }
+.shape-palette, .sort-tray { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; padding: 8px; max-width: 480px; }
+.palette-shape, .sort-shape { width: 64px; height: 64px; transition: transform 0.14s; }
+.palette-shape svg, .sort-shape svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.18)); }
+.palette-shape:active, .sort-shape:active { transform: scale(0.88); }
+.palette-shape.used { visibility: hidden; }
+.sort-bins { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; width: 100%; }
+.sort-bin { min-width: 92px; min-height: 110px; background: var(--accent-soft); border: 3px dashed var(--accent); border-radius: var(--r-md); padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bin-icon { width: 44px; height: 44px; opacity: 0.8; }
+.bin-icon svg { width: 100%; height: 100%; }
+.bin-tray { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; }
+.bin-tray .binned { width: 26px; height: 26px; animation: popIn 0.3s; }
+.sort-bin.bin-bounce { animation: bump 0.3s; }
+
+/* ============ Pattern Pond ============ */
+.pond-frame { width: 100%; max-width: 560px; padding: 18px 10px; background: linear-gradient(180deg, #dbeafe, #bde0fe); border-radius: var(--r-lg); box-shadow: inset 0 4px 14px rgba(72,149,239,0.25); overflow-x: auto; }
+.pattern-row { display: flex; gap: 8px; justify-content: center; min-width: min-content; }
+.pattern-slot { width: 56px; height: 56px; flex: 0 0 auto; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,0.5); }
+.pattern-slot:not(.filled) { border: 3px dashed var(--purple); }
+.pattern-slot.active { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 40%, transparent); animation: slotpulse 1.2s ease-in-out infinite; }
+.pattern-slot .tok { width: 100%; height: 100%; display: grid; place-items: center; }
+.pattern-slot .tok svg { width: 92%; height: 92%; }
+.pattern-slot.just-placed { animation: bump 0.4s; }
+.pattern-slot.bloom { animation: bump 0.5s; background: color-mix(in srgb, var(--pink) 30%, #fff); }
+.pattern-palette { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; padding: 8px; }
+.palette-token { width: 64px; height: 64px; transition: transform 0.14s; }
+.palette-token svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.18)); }
+.palette-token:active { transform: scale(0.88); }
+
+/* ============ Comparison Hill ============ */
+.compare-row { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; }
+.versus { font-weight: 900; color: var(--ink-soft); font-size: 1.2rem; }
+.bush-card {
+  flex: 1; max-width: 220px; min-height: 200px; background: linear-gradient(180deg, #fff, var(--accent-soft));
+  border-radius: var(--r-lg); box-shadow: var(--shadow-md); padding: 16px 10px; position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; transition: transform 0.15s;
+}
+.bush-card:active { transform: scale(0.96); }
+.bush-berries { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; align-content: center; }
+.mini-berry { width: 34px; height: 34px; }
+.mini-berry svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.18)); }
+.bush-numeral { position: absolute; top: 8px; right: 12px; font-size: 1.8rem; font-weight: 900; color: var(--ink); }
+.bush-card.winner { animation: bump 0.6s; box-shadow: 0 0 0 5px var(--yellow), var(--shadow-lg); }
+.bush-card.correct { outline: 4px solid var(--grass-2); }
+.bush-card.nudge { animation: shake 0.4s; }
+.btn-same { display: block; margin: 8px auto 0; background: var(--yellow); color: var(--ink); font-size: 1.1rem; }
+
+/* ============ Creative Greenhouse ============ */
+.greenhouse-wrap { width: 100%; max-width: 620px; }
+.greenhouse-hud { text-align: center; font-weight: 800; color: var(--purple-deep); margin-bottom: 6px; }
+.greenhouse-canvas {
+  position: relative; width: 100%; height: 46vh; min-height: 280px; overflow: hidden; touch-action: none;
+  background: linear-gradient(180deg, #eafff5 0%, #e6f4d7 55%, #cde6b0 100%);
+  border-radius: var(--r-lg); box-shadow: inset 0 6px 18px rgba(144,190,109,0.3);
+}
+.greenhouse-canvas.erasing { cursor: crosshair; box-shadow: inset 0 0 0 4px var(--red), inset 0 6px 18px rgba(144,190,109,0.3); }
+.planted { position: absolute; width: 56px; height: 56px; cursor: grab; }
+.planted.big { width: 90px; height: 90px; }
+.planted svg { width: 100%; height: 100%; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.18)); pointer-events: none; }
+.planted.lifting { z-index: 20; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.28)); }
+.greenhouse-tray { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding: 10px; max-width: 620px; }
+.tool { width: 54px; height: 54px; border-radius: var(--r-md); background: #fff; box-shadow: var(--shadow-sm); display: grid; place-items: center; font-size: 1.5rem; transition: transform 0.12s; padding: 6px; }
+.tool svg { width: 100%; height: 100%; }
+.tool:active { transform: scale(0.9); }
+.tool.selected { outline: 3px solid var(--accent); transform: scale(1.06); }
+.tool-eraser.active { outline: 3px solid var(--red); background: #ffe0e0; }
+.btn-show-lumi { margin: 6px auto; }
+
+/* wide screens: let boards breathe */
+@media (min-width: 720px) {
+  .meadow { height: 320px; }
+  .greenhouse-canvas { height: 360px; }
+}

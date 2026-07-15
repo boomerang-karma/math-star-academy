@@ -1,0 +1,13 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Logs / temp
+*.log
+/tmp/
+
+# This is a zero-build app — there are no dependencies or build artifacts to ignore.
