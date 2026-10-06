@@ -84,6 +84,7 @@ class ObservabilityStack(Stack):
             "linkedin-leads": ingestion.linkedin_worker,
             "dsar-worker": ingestion.dsar_worker,
             "retention": ingestion.retention,
+            "tracked-companies": ingestion.tracked_worker,
             "api": api.api_function,
         }
         for name, fn in workers.items():

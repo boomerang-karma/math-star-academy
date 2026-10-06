@@ -14,6 +14,7 @@ import { LeadList } from "../pages/LeadList";
 import { NotFound } from "../pages/NotFound";
 import { ReviewQueue } from "../pages/ReviewQueue";
 import { SearchPage } from "../pages/SearchPage";
+import { TrackedCompanies } from "../pages/TrackedCompanies";
 import { AppContext } from "./context";
 import type { AppContextValue } from "./context";
 
@@ -65,6 +66,7 @@ export function App({ config, auth, api }: { config: RuntimeConfig; auth: AuthSe
           <Route path="/entities/:id" element={<EntityPage />} />
           <Route path="/review" element={<ReviewQueue />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/admin/companies" element={<TrackedCompanies />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Layout>

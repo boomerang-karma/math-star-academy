@@ -181,7 +181,7 @@ def test_workers_are_private_arm64_and_traced(dev: dict[str, Template]) -> None:
     platform = {
         k: v for k, v in functions.items() if v["Properties"].get("Runtime") == "python3.12"
     }
-    assert len(platform) == 10
+    assert len(platform) == 11  # incl. the daily tracked-companies worker
     for fn in platform.values():
         props = fn["Properties"]
         assert props["Architectures"] == ["arm64"]
@@ -194,6 +194,9 @@ def test_workers_are_private_arm64_and_traced(dev: dict[str, Template]) -> None:
     dev["ingestion"].resource_count_is("AWS::StepFunctions::StateMachine", 1)
     dev["ingestion"].has_resource_properties(
         "AWS::Events::Rule", {"ScheduleExpression": "rate(15 minutes)"}
+    )
+    dev["ingestion"].has_resource_properties(
+        "AWS::Events::Rule", {"ScheduleExpression": "cron(0 1 * * ? *)"}
     )
 
 

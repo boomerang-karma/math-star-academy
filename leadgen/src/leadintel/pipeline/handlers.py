@@ -278,6 +278,38 @@ def dsar_worker(event: dict[str, Any], context: Any = None) -> dict[str, Any]:
     return {"processed": processed}
 
 
+def tracked_companies(event: dict[str, Any], context: Any = None) -> dict[str, Any]:
+    """Daily: send every active tracked company to account research (least recent first)."""
+    import boto3
+
+    from leadintel.pipeline.tracking import start_research
+
+    rt = runtime()
+    conn = rt.connection()
+    with conn.transaction():
+        rows = conn.execute(
+            "SELECT id, name, domain, linkedin_slug FROM sales.tracked_company"
+            " WHERE status = 'active' ORDER BY last_research_at NULLS FIRST, name"
+        ).fetchall()
+    if not rows:
+        return {"companies": 0, "executions": 0}
+    arns = start_research(
+        boto3.client("stepfunctions", region_name=rt.settings.aws_region),
+        rt.settings.enrichment_state_machine_arn,
+        rows,
+        credit_budget=rt.settings.tracked_research_credit_budget,
+        name_prefix="tracked-daily",
+    )
+    with conn.transaction():
+        conn.execute(
+            "UPDATE sales.tracked_company SET last_research_at = now(), last_run_status = 'queued'"
+            " WHERE id = ANY(%s)",
+            ([r["id"] for r in rows],),
+        )
+    _emit_metric("TrackedCompaniesQueued", len(rows))
+    return {"companies": len(rows), "executions": len(arns)}
+
+
 def audit_anchor(event: dict[str, Any], context: Any = None) -> dict[str, Any]:
     """Copy the audit chain head to the Object Lock bucket (tamper evidence)."""
     import boto3

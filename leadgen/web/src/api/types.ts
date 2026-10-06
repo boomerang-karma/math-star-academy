@@ -222,3 +222,25 @@ export interface Problem {
   request_id?: string;
   details?: Record<string, unknown>;
 }
+
+export interface TrackedCompany {
+  id: string;
+  name: string;
+  domain: string | null;
+  linkedin_slug: string | null;
+  notes: string | null;
+  status: "active" | "paused";
+  added_by: string;
+  created_at: string;
+  last_research_at: string | null;
+  last_run_status: string | null;
+  entity: { id: string; name: string | null } | null;
+  lead: { id: string; tier: Tier | null; score: number | null } | null;
+}
+
+export interface TrackedCompanyInput {
+  name: string;
+  domain?: string;
+  linkedin?: string;
+  notes?: string;
+}

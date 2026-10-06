@@ -73,6 +73,7 @@ class Settings(BaseSettings):
     scrapebadger_max_retries: int = 3
     scrapebadger_max_concurrency: int = 4
     scrapebadger_run_credit_budget: int = 2_000
+    tracked_research_credit_budget: int = 100  # per tracked company per research run
     # Person-profile scraping is off until legal signs off (see docs/COMPLIANCE.md).
     allow_person_profile_scraping: bool = False
 

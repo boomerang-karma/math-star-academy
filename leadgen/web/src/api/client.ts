@@ -15,6 +15,8 @@ import type {
   ReviewItem,
   SearchHit,
   Tier,
+  TrackedCompany,
+  TrackedCompanyInput,
 } from "./types";
 
 export class ApiError extends Error {
@@ -107,8 +109,31 @@ export class ApiClient {
     return this.request("POST", `/v1/review/${encodeURIComponent(id)}`, { body: { decision } });
   }
 
+  trackedCompanies(): Promise<{ items: TrackedCompany[] }> {
+    return this.request("GET", "/v1/tracked-companies");
+  }
+
+  addTrackedCompany(input: TrackedCompanyInput): Promise<TrackedCompany> {
+    return this.request("POST", "/v1/tracked-companies", { body: input });
+  }
+
+  updateTrackedCompany(
+    id: string,
+    patch: { status?: "active" | "paused"; notes?: string },
+  ): Promise<TrackedCompany> {
+    return this.request("PATCH", `/v1/tracked-companies/${encodeURIComponent(id)}`, { body: patch });
+  }
+
+  removeTrackedCompany(id: string): Promise<void> {
+    return this.request("DELETE", `/v1/tracked-companies/${encodeURIComponent(id)}`);
+  }
+
+  researchTrackedCompany(id: string): Promise<{ execution_arn: string }> {
+    return this.request("POST", `/v1/tracked-companies/${encodeURIComponent(id)}/research`, { body: {} });
+  }
+
   async request<T>(
-    method: "GET" | "POST" | "PATCH",
+    method: "GET" | "POST" | "PATCH" | "DELETE",
     path: string,
     options: { query?: Query; body?: unknown } = {},
   ): Promise<T> {
@@ -138,6 +163,9 @@ export class ApiClient {
         this.onUnauthorized();
       }
       throw await ApiError.from(response);
+    }
+    if (response.status === 204) {
+      return undefined as T;
     }
     return (await response.json()) as T;
   }

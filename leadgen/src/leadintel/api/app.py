@@ -16,7 +16,7 @@ from fastapi import APIRouter, FastAPI
 from leadintel import __version__
 from leadintel.api import middleware
 from leadintel.api.deps import AppServices, Database
-from leadintel.api.routers import graph, ingest, leads, ops, privacy
+from leadintel.api.routers import graph, ingest, leads, ops, privacy, tracked
 from leadintel.core.config import AuthMode, Settings, get_settings
 from leadintel.core.logging import configure_logging
 from leadintel.security.jwt_verifier import CognitoJwtVerifier
@@ -88,7 +88,7 @@ def create_app(settings: Settings | None = None, *, services: AppServices | None
         max_body_bytes=settings.max_request_body_bytes,
     )
     api = APIRouter(prefix="/api")
-    for module in (ops, leads, graph, privacy, ingest):
+    for module in (ops, leads, graph, privacy, ingest, tracked):
         api.include_router(module.router)
     app.include_router(api)
     return app

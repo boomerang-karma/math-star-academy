@@ -77,6 +77,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <nav className="nav" aria-label="Main">
           <NavLink to="/leads">Leads</NavLink>
           {can("entities:merge") ? <NavLink to="/review">Review queue</NavLink> : null}
+          {can("connectors:configure") ? <NavLink to="/admin/companies">Tracked companies</NavLink> : null}
         </nav>
         <SearchBox />
         <div className="user">

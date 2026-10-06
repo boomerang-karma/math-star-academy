@@ -399,3 +399,91 @@ def store_brief(
         """,
         (lead_id, model_id, input_hash, Jsonb(brief), actor),
     )
+
+
+# ---------------------------------------------------------------- tracked companies
+
+_TRACKED_SELECT = """
+    SELECT t.*, e.id AS entity_id, e.display_name AS entity_name,
+           l.id AS lead_id, l.tier, l.score
+      FROM sales.tracked_company t
+      LEFT JOIN LATERAL (
+            SELECT e.id, e.display_name
+              FROM graph.entity e
+             WHERE e.entity_type = 'organization' AND e.status = 'active'
+               AND (   (t.domain IS NOT NULL AND e.primary_domain = t.domain)
+                    OR (t.linkedin_slug IS NOT NULL AND e.linkedin_slug = t.linkedin_slug)
+                    OR (t.domain IS NULL AND t.linkedin_slug IS NULL
+                        AND lower(e.display_name) = lower(t.name)))
+             ORDER BY e.updated_at DESC
+             LIMIT 1) e ON true
+      LEFT JOIN LATERAL (
+            SELECT l.id, l.tier, l.score
+              FROM sales.lead l
+             WHERE l.organization_entity_id = e.id AND l.person_entity_id IS NULL
+             ORDER BY l.score DESC NULLS LAST
+             LIMIT 1) l ON true
+"""
+
+
+def list_tracked_companies(conn: Connection) -> list[dict[str, Any]]:
+    return conn.execute(_TRACKED_SELECT + " ORDER BY t.status, lower(t.name)").fetchall()
+
+
+def get_tracked_company(conn: Connection, company_id: UUID) -> dict[str, Any] | None:
+    return conn.execute(_TRACKED_SELECT + " WHERE t.id = %s", (company_id,)).fetchone()
+
+
+def add_tracked_company(
+    conn: Connection,
+    *,
+    name: str,
+    domain: str | None,
+    linkedin_slug: str | None,
+    notes: str | None,
+    actor: str,
+) -> UUID:
+    row = conn.execute(
+        "INSERT INTO sales.tracked_company (name, domain, linkedin_slug, notes, added_by)"
+        " VALUES (%s, %s, %s, %s, %s) RETURNING id",
+        (name, domain, linkedin_slug, notes, actor),
+    ).fetchone()
+    assert row is not None
+    company_id: UUID = row["id"]
+    return company_id
+
+
+def update_tracked_company(
+    conn: Connection,
+    company_id: UUID,
+    *,
+    status: str | None = None,
+    notes: str | None = None,
+    clear_notes: bool = False,
+) -> bool:
+    row = conn.execute(
+        """
+        UPDATE sales.tracked_company
+           SET status = coalesce(%s, status),
+               notes = CASE WHEN %s THEN NULL ELSE coalesce(%s, notes) END
+         WHERE id = %s
+        RETURNING id
+        """,
+        (status, clear_notes, notes, company_id),
+    ).fetchone()
+    return row is not None
+
+
+def delete_tracked_company(conn: Connection, company_id: UUID) -> bool:
+    row = conn.execute(
+        "DELETE FROM sales.tracked_company WHERE id = %s RETURNING id", (company_id,)
+    ).fetchone()
+    return row is not None
+
+
+def mark_tracked_research(conn: Connection, company_ids: list[UUID], *, status: str) -> None:
+    conn.execute(
+        "UPDATE sales.tracked_company SET last_research_at = now(), last_run_status = %s"
+        " WHERE id = ANY(%s)",
+        (status, company_ids),
+    )

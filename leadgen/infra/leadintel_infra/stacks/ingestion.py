@@ -14,7 +14,8 @@ Event-driven paths
   LinkedIn webhook  -> SQS linkedin   -> linkedin-leads worker
 Scheduled
   discovery (config), resolver every 15 min, scorer hourly, GA4 daily,
-  retention nightly, DSAR worker every 15 min, audit anchor hourly.
+  retention nightly, DSAR worker every 15 min, audit anchor hourly, tracked
+  companies daily (each active one becomes an account_research task).
 """
 
 from __future__ import annotations
@@ -241,6 +242,16 @@ class IngestionStack(Stack):
         )
 
         self.state_machine = self._enrichment_flow(cfg, removal)
+        # Daily research of the companies admins track on the "Tracked companies" page.
+        self.tracked_worker = worker(
+            "TrackedCompanies",
+            f"{handlers}.tracked_companies",
+            timeout=Duration.minutes(2),
+            memory=256,
+            concurrency=1,
+            env={"LEADINTEL_ENRICHMENT_STATE_MACHINE_ARN": self.state_machine.state_machine_arn},
+        )
+        self.state_machine.grant_start_execution(self.tracked_worker)
         self._schedules(cfg)
 
         CfnOutput(self, "MigratorFunctionName", value=self.migrator.function_name)
@@ -343,6 +354,7 @@ class IngestionStack(Stack):
             ("Ga4Daily", "cron(30 3 * * ? *)", self.ga4_sync),
             ("RetentionNightly", "cron(0 4 * * ? *)", self.retention),
             ("DsarEvery15Min", "rate(15 minutes)", self.dsar_worker),
+            ("TrackedCompaniesDaily", "cron(0 1 * * ? *)", self.tracked_worker),
             ("AuditAnchorHourly", "rate(1 hour)", self.audit_anchor),
         ]
         for name, expression, fn in jobs:
