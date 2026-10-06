@@ -13,8 +13,8 @@ htmlcov/
 .env
 
 # Build outputs
-build/
-dist/
+/build/
+/dist/
 infra/cdk.out/
 infra/cdk.context.json
 

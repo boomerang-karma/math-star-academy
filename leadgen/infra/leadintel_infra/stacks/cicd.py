@@ -2,8 +2,11 @@
 
 Deployed once per account by ``scripts/aws/bootstrap.sh``. The role can only be
 assumed by workflows of the configured repository on ``main`` or a protected
-GitHub environment, and it can do nothing except assume the CDK bootstrap roles
-(which carry the actual deployment permissions).
+GitHub environment. It deploys by assuming the CDK bootstrap roles (which carry
+the actual deployment permissions); beyond that it may only read this
+environment's stack outputs and invoke the in-VPC migrator, which is what
+``scripts/aws/setup.sh`` does after ``cdk deploy``. Secrets and users are managed
+by operators, not by CI.
 """
 
 from __future__ import annotations
@@ -56,6 +59,24 @@ class CicdStack(Stack):
             iam.PolicyStatement(
                 actions=["sts:AssumeRole"],
                 resources=[f"arn:aws:iam::{self.account}:role/cdk-*"],
+            )
+        )
+        role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["cloudformation:DescribeStacks"],
+                resources=[
+                    f"arn:aws:cloudformation:*:{self.account}:stack/CDKToolkit/*",
+                    f"arn:aws:cloudformation:*:{self.account}:stack/{cfg.prefix}-*/*",
+                ],
+            )
+        )
+        role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["lambda:InvokeFunction"],
+                resources=[
+                    f"arn:aws:lambda:{cfg.region}:{self.account}:function:"
+                    f"{cfg.prefix}-ingestion-Migrator*"
+                ],
             )
         )
         CfnOutput(self, "DeployRoleArn", value=role.role_arn)

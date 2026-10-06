@@ -8,7 +8,7 @@
 #   SCRAPEBADGER_API_KEY=... scripts/aws/rotate-secrets.sh --env dev --what scrapebadger
 #
 # The blind-index key is intentionally not rotatable here: changing it invalidates
-# every blind index and needs the re-index job (docs/RUNBOOK.md#blind-index-key).
+# every blind index, including suppressions (docs/RUNBOOK.md#blind-index-key).
 set -euo pipefail
 # shellcheck source=lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
@@ -61,7 +61,7 @@ case "$WHAT" in
     log "ScrapeBadger key replaced; revoke the old key in the ScrapeBadger dashboard"
     ;;
   blind-index)
-    die "blind-index key rotation requires a re-index; follow docs/RUNBOOK.md#blind-index-key"
+    die "the blind-index key cannot be rotated in place; follow docs/RUNBOOK.md#blind-index-key"
     ;;
   *) die "unknown secret '$WHAT'" ;;
 esac

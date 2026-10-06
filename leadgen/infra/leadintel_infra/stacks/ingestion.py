@@ -197,9 +197,14 @@ class IngestionStack(Stack):
             "RetentionJob", f"{handlers}.retention", timeout=Duration.minutes(10), concurrency=1
         )
         self.dsar_worker = worker(
-            "DsarWorker", f"{handlers}.dsar_worker", timeout=Duration.minutes(10), concurrency=1
+            "DsarWorker",
+            f"{handlers}.dsar_worker",
+            timeout=Duration.minutes(10),
+            concurrency=1,
+            env={"LEADINTEL_DSAR_EXPORT_BUCKET": data.dsar_export_bucket.bucket_name},
         )
         data.raw_bucket.grant_delete(self.dsar_worker)
+        data.dsar_export_bucket.grant_put(self.dsar_worker, "dsar/*")  # write-only
         self.audit_anchor = worker(
             "AuditAnchor",
             f"{handlers}.audit_anchor",

@@ -5,9 +5,11 @@ already know jane@acme.com?" or "is this phone suppressed?" with an equality
 lookup, without ever storing the plaintext. The field name is mixed in so the
 same value yields unrelated indexes in different columns.
 
-The key lives in Secrets Manager. Rotating it means re-indexing (the re-index
-job decrypts each envelope and recomputes), which is why it is a separate secret
-from the KMS key that protects the values themselves.
+The key lives in Secrets Manager, separate from the KMS key that protects the
+values themselves. It cannot be rotated in place: every stored index would stop
+matching, and suppression entries (whose plaintext is deliberately gone after an
+erasure) can only ever be matched under the key that created them. Rotation
+therefore means versioned keys with dual lookup; see docs/RUNBOOK.md#blind-index-key.
 """
 
 from __future__ import annotations

@@ -3,7 +3,8 @@
 Uses ``LEADINTEL_TEST_DATABASE_URL`` when set (CI provides a postgres:16 service);
 otherwise starts a private server from local PostgreSQL binaries in a temp dir.
 Each test module gets a freshly created database with all migrations applied.
-Tests are skipped, not failed, when no PostgreSQL is available.
+Tests are skipped when no PostgreSQL is available, unless
+``LEADINTEL_TEST_REQUIRE_DB`` is set (CI), in which case they fail.
 """
 
 from __future__ import annotations
@@ -57,6 +58,8 @@ def pg_server() -> Iterator[str]:
         return
     pg_bin = _pg_bin()
     if pg_bin is None:
+        if os.environ.get("LEADINTEL_TEST_REQUIRE_DB"):
+            pytest.fail("LEADINTEL_TEST_REQUIRE_DB is set but no PostgreSQL is available")
         pytest.skip("no PostgreSQL binaries and no LEADINTEL_TEST_DATABASE_URL")
     tmp = Path(tempfile.mkdtemp(prefix="leadintel-pg-"))
     data = tmp / "data"

@@ -71,7 +71,16 @@ confirm() {
   [[ "$answer" == "$2" ]] || die "confirmation did not match; nothing was changed"
 }
 
+# The CDK app runs on ../.venv/bin/python (infra/cdk.json); create it on a fresh clone.
+ensure_cdk_python() {
+  "$LEADGEN_ROOT/.venv/bin/python" -c "import aws_cdk" >/dev/null 2>&1 && return 0
+  require_cmd uv
+  log "Installing the CDK app's Python environment (uv sync --group infra)"
+  uv sync --project "$LEADGEN_ROOT" --group infra --frozen >&2
+}
+
 cdk() {
+  ensure_cdk_python
   (cd "$INFRA_DIR" && npx --yes aws-cdk@2 "$@")
 }
 

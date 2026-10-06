@@ -6,7 +6,7 @@ import json
 from typing import Any
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from leadintel.api import queries
@@ -24,8 +24,11 @@ def healthz() -> dict[str, str]:
 
 
 @router.get("/readyz")
-def readyz(svc: AppServices = Depends(services)) -> dict[str, str]:
-    return {"status": "ok" if svc.db.ping() else "degraded"}
+def readyz(response: Response, svc: AppServices = Depends(services)) -> dict[str, str]:
+    if svc.db.ping():
+        return {"status": "ok"}
+    response.status_code = 503
+    return {"status": "degraded"}
 
 
 @router.get("/v1/me")

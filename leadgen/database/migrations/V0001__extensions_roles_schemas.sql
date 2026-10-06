@@ -5,8 +5,10 @@
 --   leadintel_app        API runtime. Subject to row-level security. No DDL.
 --   leadintel_pipeline   Ingestion/resolution/scoring workers. Cross-territory writes.
 --   leadintel_readonly   BI/analytics. Reads masked views only.
--- Login users (passwords in Secrets Manager, or IAM auth through RDS Proxy) are granted
--- these roles by database/scripts/bootstrap_roles.sql; no credentials live in migrations.
+-- Login users (passwords in Secrets Manager, or IAM auth through RDS Proxy) are created and
+-- granted these roles outside migrations: by the migrator Lambda in AWS
+-- (MigrationRunner.ensure_login_user) and by database/scripts/reset_local.sh locally.
+-- No credentials live in migrations.
 --
 -- leadintel:as-login-user   (extensions and grants below need the connecting user)
 

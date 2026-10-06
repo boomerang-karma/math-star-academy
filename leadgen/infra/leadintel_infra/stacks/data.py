@@ -224,6 +224,22 @@ class DataStack(Stack):
             access_logs=self.logs_bucket,
             object_lock_default_retention=lock,
         )
+        # DSAR access/portability exports: one subject's decrypted data for the compliance
+        # team. Written (never read) by the DSAR worker; gone after 30 days.
+        self.dsar_export_bucket = secure_bucket(
+            self,
+            "DsarExports",
+            encryption_key=key,
+            removal_policy=removal,
+            access_logs=self.logs_bucket,
+            lifecycle_rules=[
+                s3.LifecycleRule(
+                    id="dsar-export-expiry",
+                    expiration=Duration.days(30),
+                    noncurrent_version_expiration=Duration.days(1),
+                )
+            ],
+        )
 
         database = glue.CfnDatabase(
             self,
@@ -255,4 +271,5 @@ class DataStack(Stack):
         CfnOutput(self, "RawBucketName", value=self.raw_bucket.bucket_name)
         CfnOutput(self, "CuratedBucketName", value=self.curated_bucket.bucket_name)
         CfnOutput(self, "AuditBucketName", value=self.audit_bucket.bucket_name)
+        CfnOutput(self, "DsarExportBucketName", value=self.dsar_export_bucket.bucket_name)
         CfnOutput(self, "LogsBucketName", value=self.logs_bucket.bucket_name)

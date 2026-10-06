@@ -89,6 +89,7 @@ class Settings(BaseSettings):
     # --- Storage & queues -----------------------------------------------------------
     raw_bucket: str | None = None
     audit_anchor_bucket: str | None = None
+    dsar_export_bucket: str | None = None  # access/portability exports (DSAR worker)
     local_data_dir: str = ".data"
     web_events_queue_url: str | None = None
     linkedin_queue_url: str | None = None

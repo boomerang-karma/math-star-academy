@@ -17,8 +17,9 @@ TEST_BLIND_INDEX_KEY = bytes(range(32, 64))
 
 # Tests must not depend on the developer's machine: no real AWS credentials, no
 # LEADINTEL_* variables from the shell, and no leadgen/.env written by `make run-api`.
+# LEADINTEL_TEST_* configure the test harness itself (e.g. CI's PostgreSQL) and stay.
 for _var in list(os.environ):
-    if _var.startswith("LEADINTEL_") or _var in (
+    if (_var.startswith("LEADINTEL_") and not _var.startswith("LEADINTEL_TEST_")) or _var in (
         "AWS_PROFILE",
         "AWS_ACCESS_KEY_ID",
         "AWS_SECRET_ACCESS_KEY",

@@ -6,17 +6,26 @@ Secrets Manager values and the database connection all amortize).
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from functools import cached_property
 
 from leadintel.core.config import Settings, get_settings
+from leadintel.core.errors import ConfigurationError
 from leadintel.core.logging import configure_logging
 from leadintel.pipeline.icp import IcpProfile, load_icp
 from leadintel.pipeline.service import PipelineService
 from leadintel.security.blind_index import BlindIndexer
 from leadintel.security.crypto import FieldCipher
 from leadintel.security.keyring import build_blind_indexer, build_field_cipher
-from leadintel.storage.db import Connection, connect, dsn_from_settings
+from leadintel.storage.db import (
+    STALE_AFTER_S,
+    Connection,
+    connect,
+    dsn_from_settings,
+    is_usable,
+)
+from leadintel.storage.export_store import ExportStore, LocalExportStore, S3ExportStore
 from leadintel.storage.pipeline_repo import PipelineRepository
 from leadintel.storage.raw_store import LocalRawStore, RawStore, S3RawStore
 
@@ -47,14 +56,35 @@ class Runtime:
             )
         return LocalRawStore(f"{self.settings.local_data_dir}/raw")
 
+    @cached_property
+    def export_store(self) -> ExportStore:
+        if self.settings.dsar_export_bucket:
+            import boto3
+
+            return S3ExportStore(
+                boto3.client("s3", region_name=self.settings.aws_region),
+                self.settings.dsar_export_bucket,
+            )
+        if not self.settings.is_local:
+            # Never complete an access request without delivering the export.
+            raise ConfigurationError("dsar_export_bucket is required outside the local environment")
+        return LocalExportStore(f"{self.settings.local_data_dir}/dsar-exports")
+
     _conn: Connection | None = None
+    _used_at: float | None = None
+    stale_after_s: float = STALE_AFTER_S
 
     def connection(self) -> Connection:
-        if self._conn is None or self._conn.closed or self._conn.broken:
-            self._conn = connect(
-                dsn_from_settings(self.settings), application_name="leadintel-worker"
-            )
-        return self._conn
+        now = time.monotonic()
+        idle_for = now - (self._used_at if self._used_at is not None else now)
+        conn = self._conn
+        if conn is None or not is_usable(
+            conn, idle_for_s=idle_for, stale_after_s=self.stale_after_s
+        ):
+            conn = connect(dsn_from_settings(self.settings), application_name="leadintel-worker")
+            self._conn = conn
+        self._used_at = now
+        return conn
 
     def service(self) -> PipelineService:
         repo = PipelineRepository(self.connection(), cipher=self.cipher, bidx=self.bidx)

@@ -15,7 +15,7 @@ erases the corresponding source record (LinkedIn's terms require it).
 
 The response shape below follows the versioned ``/rest`` API (``Linkedin-Version``
 header). Field paths are isolated in this module and covered by
-``tests/contract/test_linkedin_leadsync.py``; re-record that fixture when access
+``tests/contract/test_official_connectors.py``; re-record its fixture when access
 is granted and whenever the API version is bumped.
 """
 

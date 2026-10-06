@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -21,31 +22,47 @@ from leadintel_infra.config import EnvConfig  # noqa: E402
 pytestmark = pytest.mark.infra
 
 
-def _synth(name: str, tmp: Path) -> dict[str, Template]:
+@dataclasses.dataclass
+class Synth:
+    templates: dict[str, Template]
+    outdir: Path
+
+
+def _synth(name: str, tmp: Path) -> Synth:
     import app as cdk_app
 
     lambda_dir = tmp / "lambda"
     (lambda_dir / "leadintel").mkdir(parents=True)
     (lambda_dir / "leadintel" / "__init__.py").write_text("")
+    # Shaped like `npm run build` output, including the local-dev config.json from public/.
     web_dir = tmp / "web"
-    web_dir.mkdir()
+    (web_dir / "assets").mkdir(parents=True)
     (web_dir / "index.html").write_text("<!doctype html><title>LeadIntel</title>")
+    (web_dir / "favicon.svg").write_text("<svg xmlns='http://www.w3.org/2000/svg'/>")
+    (web_dir / "config.json").write_text('{"authMode": "local-dev"}')
+    (web_dir / "assets" / "index-abc123.js").write_text("console.log(1)")
     cfg = dataclasses.replace(
         EnvConfig.load(name), lambda_asset_dir=str(lambda_dir), web_asset_dir=str(web_dir)
     )
-    app = cdk.App(outdir=str(tmp / "cdk.out"))
+    outdir = tmp / "cdk.out"
+    app = cdk.App(outdir=str(outdir))
     stacks = cdk_app.build(app, cfg)
-    return {key: Template.from_stack(stack) for key, stack in stacks.items()}
+    return Synth({key: Template.from_stack(stack) for key, stack in stacks.items()}, outdir)
 
 
 @pytest.fixture(scope="module")
-def dev(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Template]:
+def dev_synth(tmp_path_factory: pytest.TempPathFactory) -> Synth:
     return _synth("dev", tmp_path_factory.mktemp("dev"))
 
 
 @pytest.fixture(scope="module")
+def dev(dev_synth: Synth) -> dict[str, Template]:
+    return dev_synth.templates
+
+
+@pytest.fixture(scope="module")
 def prod(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Template]:
-    return _synth("prod", tmp_path_factory.mktemp("prod"))
+    return _synth("prod", tmp_path_factory.mktemp("prod")).templates
 
 
 def _resources(template: Template, kind: str) -> dict[str, Any]:
@@ -251,6 +268,42 @@ def test_edge_and_cdn_hardening(dev: dict[str, Template]) -> None:
     web.resource_count_is("AWS::CloudFront::OriginAccessControl", 1)
 
 
+def test_spa_deploys_runtime_config_with_split_caching(dev_synth: Synth) -> None:
+    web = dev_synth.templates["web"]
+    deployments = _resources(web, "Custom::CDKBucketDeployment")
+    assert len(deployments) == 2
+    by_cache = {d["Properties"]["SystemMetadata"]["cache-control"]: d for d in deployments.values()}
+    assert set(by_cache) == {"public, max-age=31536000, immutable", "no-cache"}
+
+    bundles = by_cache["public, max-age=31536000, immutable"]["Properties"]
+    assert bundles["Prune"] is False  # open tabs may still load superseded bundles
+    entry_resource = by_cache["no-cache"]
+    entry = entry_resource["Properties"]
+    assert entry["DistributionPaths"] == ["/index.html", "/favicon.svg", "/config.json"]
+    # Entry files go up only after the bundles they reference.
+    assert any(dep.startswith("DeployBundles") for dep in entry_resource.get("DependsOn", [])), (
+        entry_resource.get("DependsOn")
+    )
+    # The Cognito client id is a deploy-time value substituted into config.json.
+    assert "Fn::ImportValue" in json.dumps(entry["SourceMarkers"])
+
+    # The build's local-dev config.json is never staged; the generated one is (with
+    # deploy-time markers where the client id goes).
+    configs = [
+        json.loads(re.sub(r"<<marker:0xbaba:\d+>>", '"deploy-time"', path.read_text()))
+        for path in dev_synth.outdir.glob("asset.*/config.json")
+    ]
+    assert [c["authMode"] for c in configs] == ["cognito"]
+    assert configs[0]["environment"] == "dev"
+    assert configs[0]["clientId"] == "deploy-time"
+    staged = {
+        str(path.relative_to(path.parents[0]))
+        for path in dev_synth.outdir.glob("asset.*/*")
+        if path.name in {"index.html", "favicon.svg", "assets"}
+    }
+    assert staged == {"index.html", "favicon.svg", "assets"}
+
+
 def test_custom_domain_enforces_tls12(tmp_path: Path) -> None:
     # The TLS minimum only applies with a custom domain + ACM certificate (prod should set both).
     import app as cdk_app
@@ -278,6 +331,34 @@ def test_custom_domain_enforces_tls12(tmp_path: Path) -> None:
             )
         },
     )
+
+
+def test_ci_deploy_role_is_narrow(prod: dict[str, Template]) -> None:
+    cicd = prod["cicd"]
+    statements = [
+        statement
+        for policy in _resources(cicd, "AWS::IAM::Policy").values()
+        for statement in policy["Properties"]["PolicyDocument"]["Statement"]
+    ]
+    actions = sorted(
+        action
+        for statement in statements
+        for action in (
+            [statement["Action"]] if isinstance(statement["Action"], str) else statement["Action"]
+        )
+    )
+    # Deploy through the CDK roles, read stack outputs, run migrations: nothing else.
+    assert actions == ["cloudformation:DescribeStacks", "lambda:InvokeFunction", "sts:AssumeRole"]
+    invoke = next(s for s in statements if s["Action"] == "lambda:InvokeFunction")
+    assert "leadintel-prod-ingestion-Migrator*" in json.dumps(invoke["Resource"])
+    [trust] = [
+        doc
+        for role in _resources(cicd, "AWS::IAM::Role").values()
+        if "token.actions.githubusercontent.com"
+        in (doc := json.dumps(role["Properties"]["AssumeRolePolicyDocument"]))
+    ]
+    assert "ref:refs/heads/main" in trust
+    assert "environment:prod" in trust
 
 
 def test_no_wildcard_admin_policies(dev: dict[str, Template]) -> None:

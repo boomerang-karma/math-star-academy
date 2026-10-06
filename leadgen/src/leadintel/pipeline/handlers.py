@@ -260,8 +260,17 @@ def dsar_worker(event: dict[str, Any], context: Any = None) -> dict[str, Any]:
                 export = dsar.export_subject(
                     conn, email_bidx=request["subject_email_bidx"], cipher=rt.cipher
                 )
-                result = {"records": len(export["records"]), "signals": len(export["signals"])}
-                # The export goes to the restricted DSAR bucket; the DB keeps only counts.
+                # Deliver before completing: if the upload fails, the transaction rolls back
+                # and the next run retries. The database keeps only counts and the location.
+                uri = rt.export_store.put(
+                    f"dsar/{request['id']}.json",
+                    json.dumps(export, default=str, indent=2, sort_keys=True).encode(),
+                )
+                result = {
+                    "records": len(export["records"]),
+                    "signals": len(export["signals"]),
+                    "export_uri": uri,
+                }
             else:
                 continue
             dsar.complete_request(conn, request["id"], handled_by="dsar-worker", result=result)

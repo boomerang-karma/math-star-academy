@@ -109,7 +109,7 @@ empty_bucket() {
 }
 
 if [[ "$protected" == false ]]; then
-  for key in RawBucketName CuratedBucketName LogsBucketName; do
+  for key in RawBucketName CuratedBucketName DsarExportBucketName LogsBucketName; do
     bucket="$(stack_output "$STACK_PREFIX-data" "$key")"
     [[ -n "$bucket" ]] && empty_bucket "$bucket" false
   done

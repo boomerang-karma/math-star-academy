@@ -40,12 +40,15 @@ test-integration: ## Integration tests on PostgreSQL 16 (local binaries or LEADI
 test-infra: ## Synthesize the CDK app and assert its security posture
 	$(PY) -m pytest tests/infra -q
 
-.PHONY: test-web
+.PHONY: test-web test-e2e
 test-web: ## Web unit tests and type check
 	cd web && npm run typecheck && npm test
 
+test-e2e: ## Browser tests against the production build under the production CSP
+	cd web && npx playwright test
+
 .PHONY: test-all
-test-all: lint test test-integration test-infra test-web ## Everything CI runs
+test-all: lint test test-integration test-infra test-web test-e2e ## Everything CI runs
 
 # ------------------------------------------------------------------ local stack
 .PHONY: db-up db-down db-reset demo

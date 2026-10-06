@@ -73,6 +73,7 @@ def build(app: cdk.App, cfg: EnvConfig) -> dict[str, cdk.Stack]:
         web_acl_arn=edge.web_acl_arn,
         origin_verify_secret=security.origin_verify_secret,
         cognito_domain=f"{cfg.cognito_domain_prefix}.auth.{cfg.region}.amazoncognito.com",
+        cognito_client_id=security.app_client.user_pool_client_id,
         logs_bucket=data.logs_bucket,
         env=env,
         cross_region_references=cross_region,

@@ -22,21 +22,29 @@ from leadintel.security.authz import Permission, Principal, Role, principal_from
 from leadintel.security.blind_index import BlindIndexer
 from leadintel.security.crypto import FieldCipher
 from leadintel.security.jwt_verifier import CognitoJwtVerifier
-from leadintel.storage.db import Connection, connect, principal_scope
+from leadintel.storage.db import STALE_AFTER_S, Connection, connect, is_usable, principal_scope
 
 
 class Database:
-    """One connection per worker thread (Lambda: per container), reconnecting when broken."""
+    """One connection per worker thread (Lambda: per container), replaced when it goes stale."""
 
-    def __init__(self, dsn_factory: Callable[[], str]) -> None:
+    def __init__(
+        self, dsn_factory: Callable[[], str], *, stale_after_s: float = STALE_AFTER_S
+    ) -> None:
         self._dsn_factory = dsn_factory
+        self._stale_after_s = stale_after_s
         self._local = threading.local()
 
     def _connection(self) -> Connection:
         conn: Connection | None = getattr(self._local, "conn", None)
-        if conn is None or conn.closed or conn.broken:
+        now = time.monotonic()
+        idle_for = now - getattr(self._local, "used_at", now)
+        if conn is None or not is_usable(
+            conn, idle_for_s=idle_for, stale_after_s=self._stale_after_s
+        ):
             conn = connect(self._dsn_factory(), application_name="leadintel-api")
             self._local.conn = conn
+        self._local.used_at = now
         return conn
 
     @contextmanager
@@ -52,12 +60,20 @@ class Database:
     @contextmanager
     def unscoped(self) -> Iterator[Connection]:
         conn = self._connection()
-        with conn.transaction():
-            yield conn
+        try:
+            with conn.transaction():
+                yield conn
+        except psycopg.OperationalError:
+            self._local.conn = None
+            raise
 
     def ping(self) -> bool:
-        with self.unscoped() as conn:
-            return conn.execute("SELECT 1 AS ok").fetchone() == {"ok": 1}
+        """Readiness: never raises, so the probe reports "degraded" instead of erroring."""
+        try:
+            with self.unscoped() as conn:
+                return conn.execute("SELECT 1 AS ok").fetchone() == {"ok": 1}
+        except psycopg.Error:
+            return False
 
 
 @dataclass

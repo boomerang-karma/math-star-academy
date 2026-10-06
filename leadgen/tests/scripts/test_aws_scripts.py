@@ -162,7 +162,8 @@ def test_blind_index_rotation_is_refused(fake_cli: dict[str, str]) -> None:
         "scripts/aws/rotate-secrets.sh", "--env", "dev", "--what", "blind-index", env=fake_cli
     )
     assert result.returncode != 0
-    assert "re-index" in result.stderr
+    assert "cannot be rotated in place" in result.stderr
+    assert "RUNBOOK.md#blind-index-key" in result.stderr
     assert_no_mutation(fake_cli)
 
 
