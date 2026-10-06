@@ -1,0 +1,17 @@
+{
+  "universal_name": "northwind-analytics",
+  "linkedin_url": "https://www.linkedin.com/company/northwind-analytics",
+  "name": "Northwind Analytics",
+  "description": "Northwind Analytics builds revenue intelligence software for mid-market B2B teams.",
+  "website": "https://www.northwindanalytics.com/?utm_source=linkedin",
+  "industry": "Software Development",
+  "company_size": "201-500 employees",
+  "company_type": "Privately Held",
+  "headquarters": "Austin, Texas",
+  "founded": 2016,
+  "specialties": ["Revenue intelligence", "Sales analytics", "B2B SaaS"],
+  "employee_count": 312,
+  "follower_count": 18450,
+  "logo": "https://media.licdn.com/dms/image/northwind.png",
+  "address": {"street": "500 Congress Ave", "city": "Austin", "region": "Texas", "postal_code": "78701", "country": "US"}
+}

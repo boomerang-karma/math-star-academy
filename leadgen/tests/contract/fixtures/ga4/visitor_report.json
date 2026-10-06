@@ -1,0 +1,11 @@
+{
+  "dimensionHeaders": [{"name": "customUser:lead_visitor_id"}, {"name": "date"}, {"name": "pagePath"}, {"name": "sessionSourceMedium"}],
+  "metricHeaders": [{"name": "screenPageViews", "type": "TYPE_INTEGER"}, {"name": "userEngagementDuration", "type": "TYPE_SECONDS"}],
+  "rows": [
+    {"dimensionValues": [{"value": "v_9f8e7d6c5b4a3f2e"}, {"value": "20260929"}, {"value": "/"}, {"value": "google / organic"}], "metricValues": [{"value": "2"}, {"value": "45"}]},
+    {"dimensionValues": [{"value": "v_9f8e7d6c5b4a3f2e"}, {"value": "20260929"}, {"value": "/pricing"}, {"value": "google / organic"}], "metricValues": [{"value": "3"}, {"value": "210"}]},
+    {"dimensionValues": [{"value": "v_1a2b3c4d5e6f7a8b"}, {"value": "20260930"}, {"value": "/blog/forecasting"}, {"value": "linkedin / paid"}], "metricValues": [{"value": "1"}, {"value": "30"}]},
+    {"dimensionValues": [{"value": "(not set)"}, {"value": "20260930"}, {"value": "/"}, {"value": "(direct) / (none)"}], "metricValues": [{"value": "40"}, {"value": "900"}]}
+  ],
+  "rowCount": 4
+}

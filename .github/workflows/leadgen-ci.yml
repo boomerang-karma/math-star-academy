@@ -1,0 +1,120 @@
+# LeadIntel (leadgen/): lint, tests, CDK posture checks, web tests; optional manual deploy.
+name: leadgen-ci
+
+on:
+  pull_request:
+    paths: ["leadgen/**", ".github/workflows/leadgen-ci.yml"]
+  push:
+    branches: [main]
+    paths: ["leadgen/**", ".github/workflows/leadgen-ci.yml"]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Deploy after the tests pass"
+        type: boolean
+        default: false
+      environment:
+        description: "Target environment (infra/config/<env>.json)"
+        type: choice
+        options: [dev, staging, prod]
+        default: dev
+
+permissions:
+  contents: read
+
+concurrency:
+  group: leadgen-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  python:
+    name: Python (lint, unit, contract, integration, infra)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: leadgen
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      LEADINTEL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+      LEADINTEL_TEST_REQUIRE_DB: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: leadgen/uv.lock
+      - uses: actions/setup-node@v4   # jsii, for CDK synthesis
+        with:
+          node-version: 22
+      - name: Install
+        run: uv sync --all-groups --frozen
+      - name: Lint (ruff, format, strict mypy, shellcheck)
+        run: make lint
+      - name: Unit, contract and script tests
+        run: make test
+      - name: Integration tests (PostgreSQL 16)
+        run: make test-integration
+      - name: Infrastructure synthesis and posture
+        run: make test-infra
+
+  web:
+    name: Web (types, unit, browser)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: leadgen/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: leadgen/web/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - name: Browser tests (production build under the production CSP)
+        run: npm run e2e
+
+  deploy:
+    name: Deploy ${{ inputs.environment }}
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy
+    needs: [python, web]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    # Protect staging/prod with GitHub environment rules (required reviewers). The AWS
+    # deploy role trusts only this repository's main branch and these environments.
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: leadgen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the CDK app's Python environment
+        run: uv sync --group infra --frozen
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.LEADINTEL_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.LEADINTEL_AWS_REGION || 'us-east-1' }}
+      - name: Deploy, migrate and seed
+        run: scripts/aws/setup.sh --env "${{ inputs.environment }}"

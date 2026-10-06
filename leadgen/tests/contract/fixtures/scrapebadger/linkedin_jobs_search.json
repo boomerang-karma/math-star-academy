@@ -1,0 +1,8 @@
+{
+  "jobs": [
+    {"job_id": "4012345678", "title": "Sales Development Representative", "job_url": "https://www.linkedin.com/jobs/view/4012345678", "company": "Northwind Analytics", "company_url": "https://www.linkedin.com/company/northwind-analytics", "location": "Austin, TX", "posted_at": "2026-09-28", "posted_relative": "3 days ago", "is_new": true, "benefits": []},
+    {"job_id": "4012345679", "title": "Senior Backend Engineer", "job_url": "https://www.linkedin.com/jobs/view/4012345679", "company": "Contoso Robotics", "company_url": "https://uk.linkedin.com/company/contoso-robotics?trk=public_jobs", "location": "London", "posted_at": "2026-09-30", "posted_relative": "1 day ago", "is_new": true, "benefits": []},
+    {"job_id": "4012345680", "title": "Revenue Operations Manager", "job_url": null, "company": null, "company_url": null, "location": "Remote", "posted_at": null, "posted_relative": null, "is_new": false, "benefits": []}
+  ],
+  "meta": {"result_count": 3, "start": 0, "has_more": false}
+}

@@ -1,0 +1,8 @@
+{
+  "search_metadata": {"status": "Success"},
+  "results": [
+    {"position": 1, "title": "Fabrikam Bakery", "place_id": "ChIJfabrikam0001", "data_id": "0x1:0x2", "address": "12 Market St, Springfield, IL 62701", "phone": "(217) 555-0142", "website": "https://fabrikambakery.com/", "rating": 4.7, "reviews": 312, "type": "Bakery", "gps_coordinates": {"latitude": 39.8, "longitude": -89.6}},
+    {"position": 2, "title": "Wingtip Coffee Roasters", "place_id": "ChIJwingtip0002", "address": "88 Elm St, Springfield, IL 62702", "phone": null, "website": "https://www.facebook.com/wingtipcoffee", "rating": 4.4, "reviews": 98, "types": ["Coffee shop", "Cafe"]},
+    {"position": 3, "title": "", "place_id": "ChIJbroken0003"}
+  ]
+}
