@@ -1,0 +1,106 @@
+{
+  "name": "B2B software, mid-market",
+  "industries": {
+    "software": 1.0,
+    "saas": 1.0,
+    "information technology": 0.9,
+    "internet": 0.8,
+    "computer software": 1.0,
+    "financial services": 0.7,
+    "marketing": 0.7,
+    "advertising": 0.6,
+    "staffing": 0.5,
+    "consulting": 0.5
+  },
+  "employee_bands": [
+    {
+      "min": 1,
+      "max": 10,
+      "weight": 0.2
+    },
+    {
+      "min": 11,
+      "max": 50,
+      "weight": 0.6
+    },
+    {
+      "min": 51,
+      "max": 1000,
+      "weight": 1.0
+    },
+    {
+      "min": 1001,
+      "max": 5000,
+      "weight": 0.7
+    },
+    {
+      "min": 5001,
+      "max": null,
+      "weight": 0.4
+    }
+  ],
+  "countries": {
+    "US": 1.0,
+    "CA": 0.9,
+    "GB": 0.9,
+    "IE": 0.8,
+    "DE": 0.8,
+    "NL": 0.8,
+    "AU": 0.7
+  },
+  "buyer_titles": [
+    "chief revenue officer",
+    "cro",
+    "vp sales",
+    "vice president of sales",
+    "head of sales",
+    "head of growth",
+    "vp marketing",
+    "cmo",
+    "chief marketing officer",
+    "revenue operations",
+    "sales operations",
+    "demand generation",
+    "founder",
+    "ceo"
+  ],
+  "buyer_seniorities": [
+    "c-level",
+    "vp",
+    "director",
+    "head",
+    "founder",
+    "owner"
+  ],
+  "hiring_keywords": [
+    "sales development",
+    "sdr",
+    "bdr",
+    "business development representative",
+    "account executive",
+    "revenue operations",
+    "sales operations",
+    "growth marketing",
+    "demand generation",
+    "marketing operations"
+  ],
+  "technologies": {
+    "hubspot": 0.6,
+    "salesforce": 0.8,
+    "marketo": 0.6,
+    "segment": 0.4,
+    "intercom": 0.3,
+    "google_analytics": 0.1
+  },
+  "exclude_keywords": [
+    "student",
+    "intern",
+    "recruiter",
+    "job seeker"
+  ],
+  "high_intent_paths": [
+    "/pricing",
+    "/demo",
+    "/contact"
+  ]
+}

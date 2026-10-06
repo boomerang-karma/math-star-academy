@@ -39,7 +39,8 @@ def _emit_metric(name: str, value: float, *, unit: str = "Count", **dimensions: 
                     "CloudWatchMetrics": [
                         {
                             "Namespace": "LeadIntel",
-                            "Dimensions": [sorted(dimensions)],
+                            # Per-dimension series plus an undimensioned total that alarms can use.
+                            "Dimensions": [sorted(dimensions), []],
                             "Metrics": [{"Name": name, "Unit": unit}],
                         }
                     ],

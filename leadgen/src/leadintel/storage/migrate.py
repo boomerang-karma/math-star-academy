@@ -43,8 +43,19 @@ OWNER_ROLE = "leadintel_owner"
 META_SCHEMA = "leadintel_meta"
 _FILENAME_RE = re.compile(r"^V(\d{4})__([a-z0-9_]+)\.sql$")
 _LOCK_KEY = 74_211_903  # arbitrary, fixed: serializes concurrent runners
-DEFAULT_MIGRATIONS_DIR = Path(__file__).resolve().parents[3] / "database" / "migrations"
-DEFAULT_SEEDS_DIR = Path(__file__).resolve().parents[3] / "database" / "seeds"
+
+
+def _database_dir() -> Path:
+    """``database/`` in the repository (src layout) or next to the package (Lambda bundle)."""
+    here = Path(__file__).resolve()
+    for candidate in (here.parents[3] / "database", here.parents[2] / "database"):
+        if (candidate / "migrations").is_dir():
+            return candidate
+    return here.parents[3] / "database"
+
+
+DEFAULT_MIGRATIONS_DIR = _database_dir() / "migrations"
+DEFAULT_SEEDS_DIR = _database_dir() / "seeds"
 
 
 class MigrationError(RuntimeError):

@@ -17,7 +17,7 @@ DB_NAME="${LEADINTEL_PGDATABASE:-leadintel}"
 if command -v pg_config >/dev/null 2>&1 && [ -x "$(pg_config --bindir)/initdb" ]; then
   PG_BIN="$(pg_config --bindir)"
 else
-  PG_BIN="$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1 || true)"
+  PG_BIN="$(find /usr/lib/postgresql -mindepth 2 -maxdepth 2 -type d -name bin 2>/dev/null | sort -V | tail -1 || true)"
 fi
 [ -x "${PG_BIN:-}/initdb" ] || { echo "PostgreSQL server binaries not found (install postgresql-16)" >&2; exit 1; }
 

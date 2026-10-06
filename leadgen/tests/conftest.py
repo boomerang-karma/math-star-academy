@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 
 import pytest
 
+from leadintel.core.config import Settings
 from leadintel.security.blind_index import BlindIndexer
 from leadintel.security.crypto import FieldCipher, LocalKeyProvider
 
@@ -14,10 +15,18 @@ from leadintel.security.crypto import FieldCipher, LocalKeyProvider
 TEST_MASTER_KEY = bytes(range(32))
 TEST_BLIND_INDEX_KEY = bytes(range(32, 64))
 
-# Make sure a developer's real AWS credentials can never be picked up by tests.
-for _var in ("AWS_PROFILE", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"):
-    os.environ.pop(_var, None)
+# Tests must not depend on the developer's machine: no real AWS credentials, no
+# LEADINTEL_* variables from the shell, and no leadgen/.env written by `make run-api`.
+for _var in list(os.environ):
+    if _var.startswith("LEADINTEL_") or _var in (
+        "AWS_PROFILE",
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+        "AWS_SESSION_TOKEN",
+    ):
+        os.environ.pop(_var, None)
 os.environ.setdefault("AWS_DEFAULT_REGION", "us-east-1")
+Settings.model_config["env_file"] = None
 
 
 @pytest.fixture

@@ -47,6 +47,8 @@ class Settings(BaseSettings):
     db_iam_user: str | None = None
     # Migrator only: group role -> secret holding the login user the proxy uses for it.
     db_login_user_secrets: dict[str, str] = Field(default_factory=dict)
+    # Local tooling only (demo loader): DSN of the pipeline-role login user.
+    worker_database_url: SecretStr | None = None
 
     # --- Cryptography -------------------------------------------------------------
     pii_kms_key_id: str | None = None
