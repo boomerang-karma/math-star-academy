@@ -1,0 +1,21 @@
+{
+  "public_id": "avery-quinn-4a1b2c",
+  "linkedin_url": "https://www.linkedin.com/in/avery-quinn-4a1b2c",
+  "name": "Avery Quinn, MBA",
+  "headline": "VP Sales at Northwind Analytics | Building revenue teams",
+  "location": "Austin, Texas, United States",
+  "country": "US",
+  "about": "Revenue leader.",
+  "image": null,
+  "follower_count": 2300,
+  "job_titles": ["VP Sales"],
+  "current_company": "Northwind Analytics",
+  "current_company_url": "https://www.linkedin.com/company/northwind-analytics",
+  "experience": [
+    {"title": "VP Sales", "company": "Northwind Analytics", "company_url": "https://www.linkedin.com/company/northwind-analytics", "start_year": 2022, "end_year": null},
+    {"title": "Director of Sales", "company": "Contoso Robotics", "company_url": "https://www.linkedin.com/company/contoso-robotics", "start_year": 2017, "end_year": 2022}
+  ],
+  "education": [{"school": "University of Texas at Austin", "school_url": "https://www.linkedin.com/school/university-of-texas-at-austin", "start_year": 2009, "end_year": 2013}],
+  "languages": ["English"],
+  "awards": []
+}

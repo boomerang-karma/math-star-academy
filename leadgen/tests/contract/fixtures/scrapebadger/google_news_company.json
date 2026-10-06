@@ -1,0 +1,7 @@
+{
+  "news_results": [
+    {"title": "Northwind Analytics raises $40M Series B to expand revenue intelligence platform", "link": "https://news.example.com/northwind-series-b?utm_source=rss", "source": {"name": "TechWire"}, "iso_date": "2026-09-22T14:00:00Z", "snippet": "The Austin startup..."},
+    {"title": "Northwind Analytics appoints former Contoso exec as CMO", "link": "https://news.example.com/northwind-cmo", "source": "Business Daily", "date": "2026-09-15", "snippet": ""},
+    {"title": "Northwind Shipping Co. opens new terminal", "link": "https://news.example.com/northwind-shipping", "source": "Port News", "date": "2026-09-10", "snippet": "Unrelated namesake."}
+  ]
+}

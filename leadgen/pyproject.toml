@@ -1,0 +1,96 @@
+[project]
+name = "leadintel"
+version = "0.1.0"
+description = "Lead Intelligence Platform: multi-source lead generation with entity resolution, provenance and explainable scoring on AWS."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+dependencies = [
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "httpx>=0.27",
+    # ScrapeBadger is pre-1.0: pin the minor so contract tests catch upstream changes.
+    "scrapebadger~=0.54.0",
+    "fastapi>=0.115",
+    "mangum>=0.19",
+    "psycopg[binary]>=3.2",
+    "cryptography>=42",
+    "boto3>=1.35",
+    "rapidfuzz>=3.9",
+    "phonenumbers>=8.13",
+    "tldextract>=5.1",
+    "pyjwt[crypto]>=2.9",
+]
+
+[project.optional-dependencies]
+ai = ["anthropic[bedrock]>=1.11"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "respx>=0.21",
+    "moto[kms,secretsmanager]>=5.0",
+    "uvicorn>=0.30",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "anthropic[bedrock]>=1.11",
+]
+infra = [
+    "aws-cdk-lib>=2.160",
+    "constructs>=10.3",
+]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/leadintel"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "infra"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "integration: needs a PostgreSQL 16 server (local binaries or LEADINTEL_TEST_DATABASE_URL)",
+    "infra: synthesizes the AWS CDK app (needs the 'infra' dependency group and Node.js)",
+]
+filterwarnings = ["error::pytest.PytestUnraisableExceptionWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "infra", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "BLE", "C4", "SIM", "RUF", "ASYNC", "PT"]
+ignore = [
+    "S101",   # asserts are fine in tests and type-narrowing
+    "RUF012", # pydantic/class-level defaults
+]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency-injection markers are evaluated per request, not shared defaults.
+extend-immutable-calls = [
+    "fastapi.Depends", "fastapi.Query", "fastapi.params.Depends", "fastapi.params.Query",
+    "leadintel.api.deps.require",  # builds the dependency once, at import time
+    "leadintel.pipeline.resolution.matching.Thresholds",  # frozen dataclass
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S108", "S311", "S603", "S607"]
+"src/leadintel/devtools/**" = ["S311"]
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+packages = ["leadintel"]
+strict = true
+warn_unused_ignores = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["scrapebadger.*", "mangum.*", "tldextract.*", "phonenumbers.*", "boto3.*", "botocore.*", "anthropic.*"]
+ignore_missing_imports = true

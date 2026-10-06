@@ -1,0 +1,38 @@
+{
+  "id": "6f3c1a7e-2b45-4d7e-9f01-1a2b3c4d5e6f",
+  "submittedAt": 1727700000000,
+  "testLead": false,
+  "leadType": "SPONSORED",
+  "owner": {"sponsoredAccount": "urn:li:sponsoredAccount:522529623"},
+  "versionedLeadGenFormUrn": "urn:li:versionedLeadGenForm:(urn:li:leadGenForm:7012345,1)",
+  "formResponse": {
+    "answers": [
+      {"questionId": 1, "answerDetails": {"textQuestionAnswer": {"answer": "Jordan"}}},
+      {"questionId": 2, "answerDetails": {"textQuestionAnswer": {"answer": "Lee"}}},
+      {"questionId": 3, "answerDetails": {"textQuestionAnswer": {"answer": "Jordan.Lee@NorthwindAnalytics.com"}}},
+      {"questionId": 4, "answerDetails": {"textQuestionAnswer": {"answer": "Head of Revenue Operations"}}},
+      {"questionId": 5, "answerDetails": {"textQuestionAnswer": {"answer": "Northwind Analytics"}}},
+      {"questionId": 6, "answerDetails": {"textQuestionAnswer": {"answer": "201-500"}}},
+      {"questionId": 7, "answerDetails": {"textQuestionAnswer": {"answer": "United States"}}},
+      {"questionId": 8, "answerDetails": {"textQuestionAnswer": {"answer": "+1 512 555 0199"}}}
+    ],
+    "consentResponses": [{"consentId": 1, "accepted": true}]
+  },
+  "form": {
+    "id": 7012345,
+    "name": "Revenue Benchmark Report 2026",
+    "hiddenFields": [],
+    "content": {
+      "questions": [
+        {"questionId": 1, "name": "firstName", "predefinedField": "FIRST_NAME"},
+        {"questionId": 2, "name": "lastName", "predefinedField": "LAST_NAME"},
+        {"questionId": 3, "name": "workEmail", "predefinedField": "WORK_EMAIL"},
+        {"questionId": 4, "name": "jobTitle", "predefinedField": "JOB_TITLE"},
+        {"questionId": 5, "name": "company", "predefinedField": "COMPANY_NAME"},
+        {"questionId": 6, "name": "companySize", "predefinedField": "COMPANY_SIZE"},
+        {"questionId": 7, "name": "country", "predefinedField": "COUNTRY"},
+        {"questionId": 8, "name": "phone", "predefinedField": "WORK_PHONE_NUMBER"}
+      ]
+    }
+  }
+}
