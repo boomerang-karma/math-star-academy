@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taskboard — ndemo sample app</title>
+<style>
+  :root { --bg:#f6f7fb; --panel:#fff; --ink:#1d2433; --muted:#6b7385; --line:#e3e6ee; --accent:#3b5bdb; --ok:#2f9e44; }
+  [data-theme="dark"] { --bg:#141824; --panel:#1d2233; --ink:#e7eaf3; --muted:#9aa3b8; --line:#2c3347; --accent:#748ffc; --ok:#69db7c; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); transition:background .3s,color .3s; }
+  header { display:flex; align-items:center; gap:16px; padding:14px 28px; background:var(--panel); border-bottom:1px solid var(--line); }
+  header h1 { font-size:18px; margin:0; flex:1; }
+  main { max-width:1100px; margin:28px auto; padding:0 28px; }
+  .toolbar { display:flex; gap:12px; margin-bottom:16px; }
+  input, select { font:inherit; padding:9px 12px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); }
+  #search { flex:1; }
+  button { font:inherit; padding:9px 16px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--ink); cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  table { width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  th, td { text-align:left; padding:12px 16px; border-bottom:1px solid var(--line); }
+  th { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  .pill { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; background:var(--line); }
+  .pill.high { background:#ffe3e3; color:#c92a2a; } .pill.medium { background:#fff3bf; color:#8f6d00; } .pill.low { background:#d3f9d8; color:#2b8a3e; }
+  #empty { display:none; padding:24px; text-align:center; color:var(--muted); }
+  dialog { border:none; border-radius:12px; padding:24px; width:420px; background:var(--panel); color:var(--ink); box-shadow:0 20px 60px rgba(0,0,0,.25); }
+  dialog::backdrop { background:rgba(20,24,36,.45); }
+  dialog h2 { margin:0 0 16px; font-size:18px; }
+  dialog label { display:block; margin:12px 0 4px; font-size:13px; color:var(--muted); }
+  dialog input, dialog select { width:100%; }
+  .actions { display:flex; justify-content:flex-end; gap:8px; margin-top:20px; }
+  #toast { position:fixed; right:24px; bottom:24px; padding:12px 18px; border-radius:10px; background:var(--ok); color:#fff; opacity:0; transform:translateY(10px); transition:all .25s; pointer-events:none; }
+  #toast.show { opacity:1; transform:none; }
+  tr.new { animation:flash 1.6s ease-out; }
+  @keyframes flash { from { background:rgba(59,91,219,.18); } to { background:transparent; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Taskboard</h1>
+  <button id="theme" aria-label="Toggle dark mode">Dark mode</button>
+</header>
+<main>
+  <div class="toolbar">
+    <input id="search" type="search" placeholder="Search tasks..." aria-label="Search tasks">
+    <button class="primary" id="new">New task</button>
+  </div>
+  <table>
+    <thead><tr><th>Task</th><th>Owner</th><th>Priority</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div id="empty">No tasks match your search.</div>
+</main>
+
+<dialog id="dlg" aria-labelledby="dlg-title">
+  <form method="dialog" id="form">
+    <h2 id="dlg-title">New task</h2>
+    <label for="f-title">Title</label>
+    <input id="f-title" required>
+    <label for="f-owner">Owner</label>
+    <input id="f-owner" value="You">
+    <label for="f-priority">Priority</label>
+    <select id="f-priority"><option>Low</option><option selected>Medium</option><option>High</option></select>
+    <div class="actions">
+      <button type="button" id="cancel">Cancel</button>
+      <button class="primary" id="save" value="save">Create task</button>
+    </div>
+  </form>
+</dialog>
+<div id="toast" role="status">Task created</div>
+
+<script>
+  // Fixed seed data: every run starts from the same state, so recordings are repeatable.
+  const tasks = [
+    { title: "Prepare Q4 roadmap", owner: "Priya", priority: "High" },
+    { title: "Update onboarding emails", owner: "Marco", priority: "Medium" },
+    { title: "Fix invoice PDF layout", owner: "Lena", priority: "High" },
+    { title: "Review support macros", owner: "Sam", priority: "Low" },
+    { title: "Plan customer webinar", owner: "Priya", priority: "Medium" },
+  ];
+  const $ = (s) => document.querySelector(s);
+  function render(highlight) {
+    const q = $("#search").value.trim().toLowerCase();
+    const shown = tasks.filter(t => !q || (t.title + " " + t.owner).toLowerCase().includes(q));
+    $("#rows").innerHTML = shown.map(t =>
+      `<tr${t === highlight ? ' class="new"' : ""}><td>${t.title}</td><td>${t.owner}</td>` +
+      `<td><span class="pill ${t.priority.toLowerCase()}">${t.priority}</span></td></tr>`).join("");
+    $("#empty").style.display = shown.length ? "none" : "block";
+  }
+  $("#search").addEventListener("input", () => render());
+  $("#new").addEventListener("click", () => { $("#form").reset(); $("#dlg").showModal(); $("#f-title").focus(); });
+  $("#cancel").addEventListener("click", () => $("#dlg").close());
+  $("#form").addEventListener("submit", () => {
+    const t = { title: $("#f-title").value.trim(), owner: $("#f-owner").value.trim() || "You", priority: $("#f-priority").value };
+    tasks.unshift(t);
+    $("#search").value = "";
+    render(t);
+    $("#toast").classList.add("show");
+    setTimeout(() => $("#toast").classList.remove("show"), 2500);
+  });
+  $("#theme").addEventListener("click", () => {
+    const dark = document.documentElement.dataset.theme !== "dark";
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    $("#theme").textContent = dark ? "Light mode" : "Dark mode";
+  });
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+# Sample ndemo playbook — a finished, render-ready example.
+# run-sample.sh copies this file into out/ before rendering, because
+# `ndemo render` rewrites the playbook it renders (it stores measured
+# audio/video durations). This source file therefore stays clean.
+#
+# Use it as a template for client demos: copy the folder, change app.url,
+# rewrite narration/intent, then ask Claude Code to author the actions.
+
+# titleCard is deliberately omitted: at ndemo d60e17e the title card is a
+# data: URL page, and Chrome's zoom is per-origin, so it renders at 100%
+# on a 3840px-wide capture (tiny text). Add a title in your editor instead.
+
+app:
+  url: http://127.0.0.1:4180/      # port is rewritten by run-sample.sh
+  viewport: { width: 1920, height: 1080 }
+  scale: 2                         # 2 => frames captured at 3840x2160
+  zoom: 1.25
+  colorScheme: light
+
+tts:
+  provider: openai
+  voice: alloy                     # alloy, ash, coral, echo, fable, nova, onyx, sage, shimmer
+  speed: 1.0
+
+recording:
+  fps: 30
+
+segments:
+  - id: intro
+    narration: "This is Taskboard, a simple place for your team to track work. Every task, its owner, and its priority sit on one screen."
+    intent: "Show the task list at rest."
+    actions:
+      - type: wait
+        duration: 2500
+
+  - id: search
+    narration: "Looking for something specific? Start typing, and the list filters instantly."
+    intent: "Type 'Priya' into the search box and show the filtered list."
+    timing: parallel
+    actions:
+      - type: type
+        target: { role: searchbox, name: "Search tasks" }
+        text: "Priya"
+        delay: 110
+        done:
+          text: { selector: "#rows", has: "Plan customer webinar" }
+      - type: wait
+        duration: 2000
+
+  - id: clear-search
+    narration: "Clear the search to bring everything back."
+    intent: "Empty the search box; the full list returns."
+    timing: parallel
+    actions:
+      - type: click
+        target: { role: searchbox, name: "Search tasks" }
+      - type: press
+        key: "ControlOrMeta+A"
+      - type: press
+        key: "Backspace"
+        done:
+          text: { selector: "#rows", has: "Review support macros" }
+      - type: wait
+        duration: 1200
+
+  - id: open-form
+    narration: "Adding a task takes one click."
+    intent: "Click 'New task' and show the dialog."
+    actions:
+      - type: click
+        target: { role: button, name: "New task" }
+        done:
+          visible: "#dlg"
+      - type: wait
+        duration: 800
+
+  - id: fill-form
+    narration: "Give it a title, and set the priority."
+    intent: "Type a title and pick High priority."
+    timing: parallel
+    actions:
+      - type: type
+        target: { label: "Title" }
+        text: "Send renewal quote to client"
+        delay: 70
+      - type: select
+        target: { label: "Priority" }
+        option: "High"
+      - type: wait
+        duration: 1000
+
+  - id: save
+    narration: "Create it, and it appears at the top of the list, highlighted so nobody misses it."
+    intent: "Click 'Create task'; the dialog closes, the toast shows, the new row is first."
+    timing: parallel
+    actions:
+      - type: click
+        target: { role: button, name: "Create task" }
+        done:
+          visible: "#toast.show"
+      - type: wait
+        duration: 2500
+
+  - id: dark-mode
+    narration: "And for late nights, there's a dark mode."
+    intent: "Toggle dark mode."
+    timing: parallel
+    actions:
+      - type: click
+        target: { role: button, name: "Toggle dark mode" }
+        done:
+          attribute: { selector: "html", name: "data-theme", value: "dark" }
+      - type: wait
+        duration: 2500
+
+  - id: outro
+    narration: "That's Taskboard. Simple, fast, and ready for your team."
+    intent: "Hold on the final screen."
+    actions:
+      - type: wait
+        duration: 2000
